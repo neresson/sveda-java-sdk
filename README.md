@@ -14,10 +14,10 @@ Maven: `ai.sveda:sveda-java-sdk`
 </dependency>
 ```
 
-Until Maven Central, install from the checkout:
+From a local checkout:
 
 ```bash
-mvn -f sveda-java-sdk/pom.xml install
+mvn install
 ```
 
 ## Usage
