@@ -8,7 +8,7 @@
     <artifactId>sveda-java-sdk</artifactId>
     <version>0.1.0</version>
     <name>sveda-java-sdk</name>
-    <description>Java SDK for the Sveda AI sidecar HTTP API (embed tokens, streaming chat, histories).</description>
+    <description>Java SDK for the Sveda AI sidecar HTTP API and host MCP integration.</description>
     <url>https://github.com/neresson/sveda-java-sdk</url>
 
     <licenses>

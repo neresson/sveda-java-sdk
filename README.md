@@ -20,7 +20,7 @@ From a local checkout:
 mvn install
 ```
 
-## Usage
+## Sidecar client
 
 ```java
 SvedaClient client = SvedaClient.builder()
@@ -31,6 +31,28 @@ SvedaClient client = SvedaClient.builder()
 EmbedToken token = client.embed().createToken("user-1");
 HostSession session = SvedaClient.startHostSession(client, "user-1");
 ```
+
+## Host integration (embed session + MCP tools)
+
+The `ai.sveda.host` package mirrors the Laravel SDK: mint an embed token with `host_mcp_url` / `host_mcp_token`, and expose `POST /mcp/sveda` for the sidecar to list and call your tools.
+
+```java
+SvedaHost host = SvedaHost.create(new HostConfig()
+    .baseUrl(System.getenv("SVEDA_CLIENT_BASE_URL"))
+    .hostApiKey(System.getenv("SVEDA_CLIENT_HOST_API_KEY"))
+    .mcpUrl(System.getenv("SVEDA_CLIENT_MCP_URL"))
+    .serverName("My App")
+    .instructions("Tools for the current user."));
+
+host.resolveToolsUsing(() -> List.of(new SearchPostsTool()));
+
+// Spring: map POST /mcp/sveda to host.serve(new McpHttpRequest(...))
+HostSession session = host.startSession(Map.of("id", userId), requestOrigin);
+```
+
+By default, `SvedaHost` mints opaque MCP bearer tokens with an in-memory store (fine for development). Override with `mintTokenUsing` and `verifyBearerUsing` for production auth.
+
+Implement `HostTool` with `name`, `description`, `inputSchema`, `mode`, `domain`, and `handle`.
 
 ## License
 
