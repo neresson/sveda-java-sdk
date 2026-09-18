@@ -1,6 +1,8 @@
 # sveda-java-sdk
 
-Java SDK for the [Sveda AI](https://github.com/neresson/sveda) sidecar HTTP API.
+Java SDK for the [Sveda](https://sveda.dev) sidecar HTTP API.
+
+Docs: [sveda.dev/docs/hosts/java](https://sveda.dev/docs/hosts/java)
 
 Maven: `ai.sveda:sveda-java-sdk`
 
