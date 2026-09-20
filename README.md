@@ -58,4 +58,4 @@ Implement `HostTool` with `name`, `description`, `inputSchema`, `mode`, `domain`
 
 ## License
 
-MIT
+GNU Affero General Public License v3.0. See [LICENSE](LICENSE).
