@@ -6,9 +6,9 @@
 
     <groupId>ai.sveda</groupId>
     <artifactId>sveda-java-sdk</artifactId>
-    <version>0.1.0</version>
+    <version>0.1.1</version>
     <name>sveda-java-sdk</name>
-    <description>Java SDK for the Sveda AI sidecar HTTP API and host MCP integration.</description>
+    <description>Embed a Sveda AI agent from Java or Spring Boot. https://sveda.dev/docs/hosts/java</description>
     <url>https://sveda.dev/docs/hosts/java</url>
 
     <licenses>
