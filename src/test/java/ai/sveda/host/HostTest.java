@@ -98,7 +98,7 @@ class HostTest {
         String token = host.tokenStore().mint("user-1");
 
         McpHttpResponse list = host.serve(mcpRequest(token, "tools/list", Map.of(), 1));
-        List<Map<String, Object>> tools = list(map(map(parse(list.body()).get("result")).get("tools")));
+        List<Map<String, Object>> tools = list(map(parse(list.body()).get("result")).get("tools"));
         Map<String, Object> echoMeta = Map.of();
         Map<String, Object> deleteMeta = Map.of();
         for (Map<String, Object> tool : tools) {
