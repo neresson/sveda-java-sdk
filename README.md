@@ -56,6 +56,10 @@ By default, `SvedaHost` mints opaque MCP bearer tokens with an in-memory store (
 
 Implement `HostTool` with `name`, `description`, `inputSchema`, `mode`, `domain`, and `handle`.
 
+## Agent introspection
+
+`host.describe(user)` returns JSON-shaped maps (`sveda.host/v1`) with the same tool payloads as MCP `tools/list`. Call it from a Spring command, test, or admin endpoint after the application context starts.
+
 ## License
 
 GNU Affero General Public License v3.0. See [LICENSE](LICENSE).

@@ -83,6 +83,10 @@ final class McpRequestHandler {
         return result;
     }
 
+    public static List<Map<String, Object>> listToolsFor(SvedaHost host, Object user) {
+        return listTools(host, user);
+    }
+
     private static List<Map<String, Object>> listTools(SvedaHost host, Object user) {
         List<Map<String, Object>> out = new ArrayList<>();
         for (HostTool tool : host.resolveTools(user)) {

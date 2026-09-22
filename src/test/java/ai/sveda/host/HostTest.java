@@ -174,6 +174,33 @@ class HostTest {
         assertEquals("echo_message", tools.get(0).get("name"));
     }
 
+    @Test
+    void describeMatchesMcpToolsList() throws Exception {
+        SvedaHost host = SvedaHost.create(new HostConfig());
+        host.resolveToolsUsing(user -> List.of(new EchoTool()));
+        Object user = Map.of("id", "user-1");
+
+        Map<String, Object> manifest = host.describe(user);
+        assertEquals(HostManifest.SCHEMA, manifest.get("schema"));
+
+        String token = host.tokenStore().mint("user-1");
+        McpHttpResponse list = host.serve(mcpRequest(token, "tools/list", Map.of("per_page", 250), 1));
+        List<Map<String, Object>> listed = list(map(parse(list.body()).get("result")).get("tools"));
+        Map<String, Map<String, Object>> byName = new LinkedHashMap<>();
+        for (Map<String, Object> tool : listed) {
+            byName.put(String.valueOf(tool.get("name")), tool);
+        }
+
+        @SuppressWarnings("unchecked")
+        List<Map<String, Object>> manifestTools = (List<Map<String, Object>>) manifest.get("tools");
+        for (Map<String, Object> tool : manifestTools) {
+            Map<String, Object> listedTool = byName.get(String.valueOf(tool.get("name")));
+            assertNotNull(listedTool);
+            assertEquals(listedTool.get("description"), tool.get("description"));
+            assertEquals(listedTool.get("_meta"), tool.get("_meta"));
+        }
+    }
+
     private static McpHttpRequest mcpRequest(String token, String method, Map<String, Object> params, int id)
         throws Exception {
         Map<String, Object> payload = new LinkedHashMap<>();

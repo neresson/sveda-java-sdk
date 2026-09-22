@@ -24,6 +24,7 @@ public final class SvedaHost {
     private Function<String, HostAuth> verifyBearerUsing;
     private Predicate<Object> authorizeUsing;
     private Function<Object, Void> afterAuthenticateUsing;
+    private boolean mintTokenUsingConfigured;
     private final List<HostTool> registeredTools = new ArrayList<>();
 
     public SvedaHost(HostConfig config) {
@@ -64,6 +65,7 @@ public final class SvedaHost {
     public void mintTokenUsing(Function<Object, String> callback) {
         if (callback != null) {
             this.mintTokenUsing = callback;
+            this.mintTokenUsingConfigured = true;
         }
     }
 
@@ -95,6 +97,20 @@ public final class SvedaHost {
             return tools == null ? List.of() : List.copyOf(tools);
         }
         return List.copyOf(registeredTools);
+    }
+
+    public Map<String, Object> describe(Object user) {
+        return HostManifest.describe(this, user);
+    }
+
+    public Map<String, Object> registeredHooks() {
+        Map<String, Object> hooks = new LinkedHashMap<>();
+        hooks.put("resolve_tools", resolveToolsUsing != null);
+        hooks.put("policy", policyUsing != null);
+        hooks.put("authorize", authorizeUsing != null);
+        hooks.put("visitor_id", visitorIdUsing != null);
+        hooks.put("mint_token", mintTokenUsingConfigured);
+        return hooks;
     }
 
     public String policyFor(Object user) {
