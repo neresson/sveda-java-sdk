@@ -90,6 +90,66 @@ class HostTest {
         assertEquals("hello", data.get("message"));
     }
 
+    @Test
+    void startSessionSendsPolicy() throws Exception {
+        var captured = new LinkedHashMap<String, Object>();
+        try (MockSidecar sidecar = MockSidecar.start(captured)) {
+            SvedaHost host = SvedaHost.create(new HostConfig()
+                .baseUrl(sidecar.baseUrl)
+                .hostApiKey("host-secret")
+                .mcpUrl("https://app.test/mcp/sveda"));
+            host.resolveToolsUsing(() -> List.of(new EchoTool()));
+            host.policyUsing(user -> "agent");
+
+            HostSession session = host.startSession(Map.of("id", "user-1"));
+            assertEquals("embed-token", session.token());
+            assertEquals("agent", captured.get("policy"));
+        }
+    }
+
+    @Test
+    void toolsCallFiltersByAuthenticatedUser() throws Exception {
+        SvedaHost host = SvedaHost.create(new HostConfig());
+        host.resolveToolsUsing(user -> {
+            if (user instanceof Map<?, ?> map && "user-1".equals(String.valueOf(map.get("id")))) {
+                return List.of(new EchoTool());
+            }
+            return List.of();
+        });
+
+        String allowed = host.tokenStore().mint("user-1");
+        String denied = host.tokenStore().mint("other");
+
+        McpHttpResponse ok = host.serve(mcpRequest(allowed, "tools/call", Map.of(
+            "name", "echo_message",
+            "arguments", Map.of("message", "hello")
+        ), 1));
+        Map<String, Object> okBody = parse(ok.body());
+        assertEquals(false, map(okBody.get("result")).get("isError"));
+
+        McpHttpResponse blocked = host.serve(mcpRequest(denied, "tools/call", Map.of(
+            "name", "echo_message",
+            "arguments", Map.of("message", "hello")
+        ), 2));
+        Map<String, Object> blockedBody = parse(blocked.body());
+        Map<String, Object> blockedResult = map(blockedBody.get("result"));
+        assertEquals(true, blockedResult.get("isError"));
+        List<Map<String, Object>> content = list(blockedResult.get("content"));
+        assertTrue(String.valueOf(content.get(0).get("text")).contains("Unknown tool"));
+    }
+
+    @Test
+    void zeroArgResolveToolsCallbackStillWorks() throws Exception {
+        SvedaHost host = SvedaHost.create(new HostConfig());
+        host.resolveToolsUsing(() -> List.of(new EchoTool()));
+        String token = host.tokenStore().mint("user-1");
+
+        McpHttpResponse list = host.serve(mcpRequest(token, "tools/list", Map.of("per_page", 250), 1));
+        List<Map<String, Object>> tools = list(map(parse(list.body()).get("result")).get("tools"));
+        assertEquals(1, tools.size());
+        assertEquals("echo_message", tools.get(0).get("name"));
+    }
+
     private static McpHttpRequest mcpRequest(String token, String method, Map<String, Object> params, int id)
         throws Exception {
         Map<String, Object> payload = new LinkedHashMap<>();

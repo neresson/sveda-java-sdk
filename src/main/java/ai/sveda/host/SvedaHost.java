@@ -17,7 +17,8 @@ import java.util.function.Supplier;
 public final class SvedaHost {
     private final HostConfig config;
     private final MemoryTokenStore tokenStore;
-    private Supplier<List<HostTool>> resolveToolsUsing;
+    private Function<Object, List<HostTool>> resolveToolsUsing;
+    private Function<Object, String> policyUsing;
     private Function<Object, String> visitorIdUsing;
     private Function<Object, String> mintTokenUsing;
     private Function<String, HostAuth> verifyBearerUsing;
@@ -45,7 +46,15 @@ public final class SvedaHost {
     }
 
     public void resolveToolsUsing(Supplier<List<HostTool>> callback) {
+        this.resolveToolsUsing = user -> callback.get();
+    }
+
+    public void resolveToolsUsing(Function<Object, List<HostTool>> callback) {
         this.resolveToolsUsing = callback;
+    }
+
+    public void policyUsing(Function<Object, String> callback) {
+        this.policyUsing = callback;
     }
 
     public void visitorIdUsing(Function<Object, String> callback) {
@@ -77,11 +86,27 @@ public final class SvedaHost {
     }
 
     public List<HostTool> resolveTools() {
+        return resolveTools(null);
+    }
+
+    public List<HostTool> resolveTools(Object user) {
         if (resolveToolsUsing != null) {
-            List<HostTool> tools = resolveToolsUsing.get();
+            List<HostTool> tools = resolveToolsUsing.apply(user);
             return tools == null ? List.of() : List.copyOf(tools);
         }
         return List.copyOf(registeredTools);
+    }
+
+    public String policyFor(Object user) {
+        if (policyUsing == null) {
+            return null;
+        }
+        String value = policyUsing.apply(user);
+        if (value == null) {
+            return null;
+        }
+        String policy = value.trim();
+        return policy.isEmpty() ? null : policy;
     }
 
     public boolean configured() {
@@ -117,7 +142,15 @@ public final class SvedaHost {
             .hostApiKey(config.hostApiKey())
             .build();
 
-        var token = client.embed().createToken(visitorId, mcpUrl, mcpToken);
+        Map<String, Object> params = new LinkedHashMap<>();
+        params.put("visitor_id", visitorId);
+        params.put("host_mcp_url", mcpUrl);
+        params.put("host_mcp_token", mcpToken);
+        String policy = policyFor(user);
+        if (policy != null) {
+            params.put("policy", policy);
+        }
+        var token = client.embed().createToken(params);
         return SvedaClient.startHostSession(client.baseUrl(), token.token(), token.expiresIn(), token.appearance());
     }
 

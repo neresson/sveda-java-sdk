@@ -37,7 +37,7 @@ final class McpRequestHandler {
 
         if ("tools/list".equals(method)) {
             int perPage = perPage(params);
-            List<Map<String, Object>> tools = listTools(host);
+            List<Map<String, Object>> tools = listTools(host, context.user());
             int start = cursorStart(params);
             int end = Math.min(tools.size(), start + perPage);
             List<Map<String, Object>> slice = tools.subList(start, end);
@@ -83,9 +83,9 @@ final class McpRequestHandler {
         return result;
     }
 
-    private static List<Map<String, Object>> listTools(SvedaHost host) {
+    private static List<Map<String, Object>> listTools(SvedaHost host, Object user) {
         List<Map<String, Object>> out = new ArrayList<>();
-        for (HostTool tool : host.resolveTools()) {
+        for (HostTool tool : host.resolveTools(user)) {
             Map<String, Object> schema = tool.inputSchema();
             if (schema == null || schema.isEmpty()) {
                 schema = Map.of("type", "object", "properties", Map.of());
@@ -117,7 +117,7 @@ final class McpRequestHandler {
         String name = stringValue(params.get("name"));
         Map<String, Object> arguments = mapValue(params.get("arguments"));
 
-        for (HostTool tool : host.resolveTools()) {
+        for (HostTool tool : host.resolveTools(context.user())) {
             if (!tool.name().equals(name)) {
                 continue;
             }

@@ -6,7 +6,7 @@
 
     <groupId>ai.sveda</groupId>
     <artifactId>sveda-java-sdk</artifactId>
-    <version>0.2.0</version>
+    <version>0.3.0</version>
     <name>sveda-java-sdk</name>
     <description>Embed a Sveda AI agent from Java or Spring Boot. https://sveda.dev/docs/hosts/java</description>
     <url>https://sveda.dev/docs/hosts/java</url>

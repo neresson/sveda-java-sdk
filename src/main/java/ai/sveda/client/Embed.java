@@ -45,6 +45,14 @@ public final class Embed {
             payload.put("host_mcp_url", hostMcpUrl);
             payload.put("host_mcp_token", hostMcpToken);
         }
+        Object policy = params == null ? null : params.get("policy");
+        if (policy instanceof String policyName && !policyName.isBlank()) {
+            payload.put("policy", policyName.trim());
+        }
+        Object grants = params == null ? null : params.get("grants");
+        if (grants instanceof Map<?, ?> grantsMap) {
+            payload.put("grants", grantsMap);
+        }
         return EmbedToken.from(transport.requestJson("POST", "/sveda/embed/token", payload));
     }
 

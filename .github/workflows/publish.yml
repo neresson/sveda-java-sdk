@@ -29,15 +29,26 @@ jobs:
         run: mvn -B deploy
 
   central:
-    if: ${{ secrets.MAVEN_CENTRAL_USERNAME != '' && secrets.GPG_PRIVATE_KEY != '' }}
     runs-on: ubuntu-latest
     env:
       MAVEN_USERNAME: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
       MAVEN_PASSWORD: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
       MAVEN_GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+      GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
     steps:
+      - name: Check Maven Central secrets
+        id: check
+        run: |
+          if [ -z "${MAVEN_USERNAME}" ] || [ -z "${GPG_PRIVATE_KEY}" ]; then
+            echo "Maven Central secrets are not set; skip."
+            echo "run=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          fi
       - uses: actions/checkout@v4
+        if: steps.check.outputs.run == 'true'
       - uses: actions/setup-java@v4
+        if: steps.check.outputs.run == 'true'
         with:
           distribution: temurin
           java-version: 17
@@ -48,10 +59,11 @@ jobs:
           gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
           gpg-passphrase: MAVEN_GPG_PASSPHRASE
       - name: Import GPG key
-        env:
-          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+        if: steps.check.outputs.run == 'true'
         run: |
           echo "${GPG_PRIVATE_KEY}" | gpg --batch --import
           gpg --list-secret-keys --keyid-format LONG
-      - run: mvn -B verify
-      - run: mvn -B deploy -Pcentral
+      - if: steps.check.outputs.run == 'true'
+        run: mvn -B verify
+      - if: steps.check.outputs.run == 'true'
+        run: mvn -B deploy -Pcentral
