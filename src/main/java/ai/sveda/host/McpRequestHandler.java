@@ -96,7 +96,13 @@ final class McpRequestHandler {
             entry.put("description", tool.description());
             entry.put("inputSchema", schema);
             entry.put("annotations", annotations(tool.mode()));
-            entry.put("_meta", Map.of("domain", tool.domain(), "mode", tool.mode()));
+            Map<String, Object> meta = new LinkedHashMap<>();
+            meta.put("domain", tool.domain());
+            meta.put("mode", tool.mode());
+            if ("required".equals(tool.confirmation())) {
+                meta.put("confirmation", "required");
+            }
+            entry.put("_meta", meta);
             out.add(entry);
         }
         return out;

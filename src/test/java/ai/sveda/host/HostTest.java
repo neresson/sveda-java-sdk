@@ -76,6 +76,7 @@ class HostTest {
         Map<String, Object> meta = map(tools.get(0).get("_meta"));
         assertEquals("demo", meta.get("domain"));
         assertEquals("read", meta.get("mode"));
+        assertFalse(meta.containsKey("confirmation"));
 
         McpHttpResponse call = host.serve(mcpRequest(token, "tools/call", Map.of(
             "name", "echo_message",
@@ -88,6 +89,29 @@ class HostTest {
         Map<String, Object> decoded = parse(String.valueOf(content.get(0).get("text")));
         Map<String, Object> data = map(decoded.get("data"));
         assertEquals("hello", data.get("message"));
+    }
+
+    @Test
+    void confirmationMetaIsPublishedWhenRequired() throws Exception {
+        SvedaHost host = SvedaHost.create(new HostConfig());
+        host.resolveToolsUsing(() -> List.of(new EchoTool(), new DeleteTool()));
+        String token = host.tokenStore().mint("user-1");
+
+        McpHttpResponse list = host.serve(mcpRequest(token, "tools/list", Map.of(), 1));
+        List<Map<String, Object>> tools = list(map(map(parse(list.body()).get("result")).get("tools")));
+        Map<String, Object> echoMeta = Map.of();
+        Map<String, Object> deleteMeta = Map.of();
+        for (Map<String, Object> tool : tools) {
+            if ("echo_message".equals(tool.get("name"))) {
+                echoMeta = map(tool.get("_meta"));
+            }
+            if ("delete_post".equals(tool.get("name"))) {
+                deleteMeta = map(tool.get("_meta"));
+            }
+        }
+        assertFalse(echoMeta.containsKey("confirmation"));
+        assertEquals("required", deleteMeta.get("confirmation"));
+        assertEquals("delete", deleteMeta.get("mode"));
     }
 
     @Test
@@ -180,7 +204,7 @@ class HostTest {
         return (List<Map<String, Object>>) value;
     }
 
-    private static final class EchoTool implements HostTool {
+    private static class EchoTool implements HostTool {
         @Override
         public String name() {
             return "echo_message";
@@ -214,6 +238,23 @@ class HostTest {
                 "success", true,
                 "data", Map.of("message", arguments.get("message"))
             );
+        }
+    }
+
+    private static final class DeleteTool extends EchoTool {
+        @Override
+        public String name() {
+            return "delete_post";
+        }
+
+        @Override
+        public String mode() {
+            return HostModes.DELETE;
+        }
+
+        @Override
+        public String confirmation() {
+            return "required";
         }
     }
 }

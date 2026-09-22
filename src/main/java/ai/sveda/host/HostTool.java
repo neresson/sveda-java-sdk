@@ -16,5 +16,9 @@ public interface HostTool {
 
     String domain();
 
+    default String confirmation() {
+        return "auto";
+    }
+
     Object handle(Map<String, Object> arguments, HostCallContext context) throws Exception;
 }
