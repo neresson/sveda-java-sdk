@@ -67,3 +67,17 @@ jobs:
         run: mvn -B verify
       - if: steps.check.outputs.run == 'true'
         run: mvn -B deploy -Pcentral
+
+  notify-compat:
+    needs: [github-packages]
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+    steps:
+      - name: Trigger sveda SDK compatibility matrix
+        if: ${{ secrets.SVEDA_REPO_DISPATCH_TOKEN != '' }}
+        uses: peter-evans/repository-dispatch@v3
+        with:
+          token: ${{ secrets.SVEDA_REPO_DISPATCH_TOKEN }}
+          repository: neresson/sveda
+          event-type: sdk-release
+          client-payload: '{"sdk":"java","version":"${{ github.ref_name }}"}'
