@@ -62,4 +62,4 @@ Implement `HostTool` with `name`, `description`, `inputSchema`, `mode`, `domain`
 
 ## License
 
-GNU Affero General Public License v3.0. See [LICENSE](LICENSE).
+Apache License 2.0. See [LICENSE](LICENSE).
